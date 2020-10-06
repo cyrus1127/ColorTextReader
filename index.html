@@ -44,6 +44,11 @@
                                     
                                     console.log("element_text ? " + element_text);
                                     output_holder.append(element_text);        
+                                    
+                                    //get next name for error debug
+                                    if(i+1 <= keys.length-1){
+                                        wiilRead_key_name = keys[i+1].childNodes[0].nodeValue;
+                                    }
                                 }    
                             }else{
                                 alert ("keys and value count not match ");
