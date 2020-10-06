@@ -1,0 +1,134 @@
+<html>
+    <header>
+        <link type="text/css" rel="stylesheet"  href="./style.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                var input_holder = $("#contentInputView");
+                var output_holder = $("#outputHolder");
+                var btn_submit = $("#btn_submit");
+                var btn_loadfile = $("#btn_loadfile");
+                
+                
+                var parser = new DOMParser();
+                
+                input_holder.val("<colors><key>Color A</key><array><value>1,255,1</value><value>205,15,1</value><value>255,1,100</value></array></colors>");
+                
+                btn_loadfile.change(readSingleFile);
+                
+                btn_submit.click(function(){
+                    cleanValue();
+                    
+                    var inputText = input_holder.val();
+                    inputText = removeNewlines(inputText);
+                    
+                    var xmlDoc ;
+                    
+                    try {
+                        xmlDoc = parser.parseFromString (inputText,"text/xml");
+                        var keys = xmlDoc.getElementsByTagName("key");
+                        var values = xmlDoc.getElementsByTagName("array");
+                        var text_v = values[0].childNodes[0].nodeName;
+    
+                        if(keys.length){
+                            if(keys.length == values.length){
+                                for(var i = 0 ; i < keys.length; i++){
+                                    
+                                    //make value array with the xml 
+                                    var array = [];
+                                    for(var vi = 0 ; vi < values[i].childElementCount; vi++){
+                                        array[vi] = values[i].childNodes[vi].childNodes[0].nodeValue;  
+                                    }
+                                    var element_text = getTableRoll(keys[i].childNodes[0].nodeValue , array);
+                                    
+                                    console.log("element_text ? " + element_text);
+                                    output_holder.append(element_text);        
+                                }    
+                            }else{
+                                alert ("keys and value count not match ");
+                            }
+                        }else{
+                            alert ("Please input a valid xml ");
+                        }
+                    } catch (e) {
+                        alert ("XML parsing error.");
+                    };
+                });
+                
+                ///For in put parsed XML datas' value to HTML table Roll text
+                function getTableRoll( rollName , colors){
+                    var roll_tab = "tr";
+                    var data_tab = "td";
+                    var header_tab = "th";
+                    var datas = "";
+                    
+                    datas = datas + getElementPainText(header_tab,"", rollName);
+                    
+                    if(jQuery.type( colors ) === "array" ){
+                        
+                        var count = colors.length;
+                        console.log("value is kind of array. count ? " + count);
+                        console.log("colors ? " + colors);
+                        for(var i = 0 ;i < count ; i ++){
+                            var rgb = colors[i].split(",");
+                            var rgb_prop = "style='background:rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+",1)'";
+                            datas = datas + getElementPainText(data_tab,rgb_prop, colors[i]);
+                        }
+                        
+                        var rollCount = "rowspan='" + count +"'";
+                        datas = getElementPainText(roll_tab,rollCount, datas);
+                        return datas ;
+                    }else if(jQuery.type( colors ) === "string" ){
+                        console.log("value is kind of string");
+                    }
+                };
+                
+                function getElementPainText( tab ,  porpt,  content){
+                    var tab_p = "<"+tab + " " + porpt +">";
+                    var tab_s = "</"+tab+">";
+                    return tab_p + content + tab_s;
+                };
+                
+                //remove line breaks from str
+                function removeNewlines(str) {
+                    str = str.replace(/\s{2,}/g, '');
+                    str = str.replace(/\t/g, '');
+                    str = str.toString().trim().replace(/(\r\n|\n|\r)/g,"");
+                    console.log("removeNewlines ? " + str);
+                    return str;
+                }
+                
+                ///do clean/reset the table view
+                function cleanValue(){
+                    output_holder.html("<table id='outputHolder'><tr><th>Header</th><td class='colorPres'>color code</td></tr></table>");
+                };
+                
+                function readSingleFile(e) {
+                      var file = e.target.files[0];
+                      if (!file) {
+                        return;
+                      }
+                      var reader = new FileReader();
+                      reader.onload = function(e) {
+                        var contents = e.target.result;
+                          input_holder.val(contents);
+                      };
+                      reader.readAsText(file);
+                }
+                
+            });
+        </script>
+    </header>
+    <body>
+        <div id="upperPart" class="holderLayer">
+            <textarea type="text" id="contentInputView"></textarea>
+            <br>
+            <input type="file" id="btn_loadfile" value="Load a XML file" >
+            <input type="button" id="btn_submit" value="Parse the color code" >
+        </div>
+        
+        <div id="holder" class="holderLayer">
+            <table id="outputHolder"><tr><th>Header</th><td class="colorPres">color code</td></tr></table>
+        </div>
+    </body>
+</html>
